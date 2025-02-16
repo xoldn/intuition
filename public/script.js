@@ -80,5 +80,29 @@ async function sendResult() {
     }
 }
 
+// Получение списка лучших игроков
+async function getLeaderboard() {
+    try {
+        let response = await fetch("/leaderboard");
+        let data = await response.json();
+
+        let leaderboardText = "🏆 **Топ игроков:**\n";
+        data.forEach((player, index) => {
+            leaderboardText += `${index + 1}. ${player.username}: ${player.score} очков\n`;
+        });
+
+        alert(leaderboardText);
+    } catch (error) {
+        console.error("Ошибка при получении топ-игроков:", error);
+    }
+}
+
+// Добавляем кнопку просмотра результатов
+const leaderboardBtn = document.createElement("button");
+leaderboardBtn.textContent = "📊 Топ игроков";
+leaderboardBtn.style = "margin-top: 20px; padding: 10px; font-size: 1rem;";
+leaderboardBtn.onclick = getLeaderboard;
+document.body.appendChild(leaderboardBtn);
+
 // Запуск первого раунда
 startNewRound();

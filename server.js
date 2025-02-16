@@ -6,8 +6,9 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static("public"));
 
-// Хранение сессий игроков (цвет карты)
-let gameSessions = {};
+// Хранение очков пользователей
+let usersScores = {}; // { user_id: { username, score } }
+let gameSessions = {}; // { user_id: color }
 
 // Генерация цвета карты и сохранение на сервере
 app.post("/start_round", (req, res) => {
@@ -18,7 +19,7 @@ app.post("/start_round", (req, res) => {
     }
 
     const color = Math.random() < 0.5 ? "white" : "black";
-    gameSessions[user_id] = color; // Сохраняем цвет карты у пользователя
+    gameSessions[user_id] = color;
 
     res.json({ message: "Round started. Make your guess!" });
 });
@@ -38,9 +39,36 @@ app.post("/check_guess", (req, res) => {
     }
 
     const isCorrect = guess === correctColor;
-    delete gameSessions[user_id]; // Удаляем сессию после ответа
+    delete gameSessions[user_id];
 
     res.json({ correct: isCorrect, color: correctColor });
+});
+
+// Сохранение результата
+app.post("/save_score", (req, res) => {
+    const { user_id, username, score } = req.body;
+
+    if (!user_id || !username || score === undefined) {
+        return res.status(400).json({ error: "Invalid data" });
+    }
+
+    usersScores[user_id] = { username, score };
+    console.log("Сохранён результат:", usersScores);
+    res.json({ status: "ok", message: "Score saved!" });
+});
+
+// Получение всех результатов
+app.get("/get_scores", (req, res) => {
+    res.json(usersScores);
+});
+
+// Получение топ-5 игроков
+app.get("/leaderboard", (req, res) => {
+    let sortedUsers = Object.values(usersScores)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5);
+    
+    res.json(sortedUsers);
 });
 
 // Запуск сервера
