@@ -1,10 +1,12 @@
 let urlParams = new URLSearchParams(window.location.search);
 let userId = urlParams.get("user_id");
 let username = urlParams.get("username") || "Игрок";
+let chatId = urlParams.get("chat_id");
+let messageId = urlParams.get("message_id");
 
-if (!userId) {
-    alert("Ошибка: не удалось получить user_id.");
-    throw new Error("user_id not found");
+if (!userId || !chatId || !messageId) {
+    alert("Ошибка: не удалось получить данные пользователя.");
+    throw new Error("Missing user data");
 }
 
 let correctCount = 0;
@@ -14,9 +16,6 @@ let wrongCount = 0;
 const card = document.getElementById("card");
 const correctScoreEl = document.getElementById("correctScore");
 const wrongScoreEl = document.getElementById("wrongScore");
-const leaderboardDiv = document.createElement("div");
-leaderboardDiv.id = "leaderboard";
-document.body.appendChild(leaderboardDiv);
 
 // Запуск нового раунда
 async function startNewRound() {
@@ -58,7 +57,8 @@ async function makeGuess(guess) {
         }
 
         updateScore();
-        updateLeaderboard();
+        sendResultToServer();
+        sendScoreToTelegram();
         setTimeout(startNewRound, 500);
     } catch (error) {
         console.error("Ошибка при проверке ответа:", error);
@@ -71,24 +71,40 @@ function updateScore() {
     wrongScoreEl.textContent = `❌ ${wrongCount}`;
 }
 
-// Получение и отображение рейтинга
-async function updateLeaderboard() {
+// Отправка результата на сервер
+async function sendResultToServer() {
     try {
-        let response = await fetch("/leaderboard");
-        let data = await response.json();
-
-        let leaderboardText = `<h2>🏆 Топ игроков:</h2><ul>`;
-        data.forEach((player, index) => {
-            leaderboardText += `<li>${index + 1}. ${player.username}: ✅ ${player.correct} | ❌ ${player.wrong}</li>`;
+        await fetch("/save_score", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId, username: username, score: correctCount })
         });
-        leaderboardText += `</ul>`;
-
-        leaderboardDiv.innerHTML = leaderboardText;
     } catch (error) {
-        console.error("Ошибка при получении топ-игроков:", error);
+        console.error("Ошибка при отправке результата:", error);
+    }
+}
+
+// Отправка результата в Telegram
+async function sendScoreToTelegram() {
+    try {
+        let botToken = "YOUR_BOT_TOKEN"; // Укажи свой токен бота
+        let botUrl = `https://api.telegram.org/bot${botToken}/setGameScore`;
+
+        let params = new URLSearchParams({
+            user_id: userId,
+            score: correctCount,
+            chat_id: chatId,
+            message_id: messageId,
+            force: true
+        });
+
+        await fetch(`${botUrl}?${params}`, { method: "POST" });
+
+        console.log("Результат отправлен в Telegram!");
+    } catch (error) {
+        console.error("Ошибка при отправке результата в Telegram:", error);
     }
 }
 
 // Запуск первого раунда
 startNewRound();
-updateLeaderboard();
