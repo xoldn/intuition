@@ -6,11 +6,11 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static("public"));
 
-// Хранение очков пользователей
-let usersScores = {}; // { user_id: { username, score } }
+// Хранение статистики игроков
+let usersScores = {}; // { user_id: { username, correct: 0, wrong: 0 } }
 let gameSessions = {}; // { user_id: color }
 
-// Генерация цвета карты и сохранение на сервере
+// Генерация цвета карты
 app.post("/start_round", (req, res) => {
     const { user_id } = req.body;
     
@@ -41,33 +41,38 @@ app.post("/check_guess", (req, res) => {
     const isCorrect = guess === correctColor;
     delete gameSessions[user_id];
 
+    // Обновляем статистику
+    if (!usersScores[user_id]) {
+        usersScores[user_id] = { username: "Игрок", correct: 0, wrong: 0 };
+    }
+
+    if (isCorrect) {
+        usersScores[user_id].correct += 1;
+    } else {
+        usersScores[user_id].wrong += 1;
+    }
+
     res.json({ correct: isCorrect, color: correctColor });
 });
 
-// Сохранение результата
-app.post("/save_score", (req, res) => {
-    const { user_id, username, score } = req.body;
-
-    if (!user_id || !username || score === undefined) {
-        return res.status(400).json({ error: "Invalid data" });
+// Получение статистики игрока
+app.get("/get_stats", (req, res) => {
+    const { user_id } = req.query;
+    
+    if (!usersScores[user_id]) {
+        return res.json({ correct: 0, wrong: 0 });
     }
 
-    usersScores[user_id] = { username, score };
-    console.log("Сохранён результат:", usersScores);
-    res.json({ status: "ok", message: "Score saved!" });
+    res.json(usersScores[user_id]);
 });
 
-// Получение всех результатов
-app.get("/get_scores", (req, res) => {
-    res.json(usersScores);
-});
-
-// Получение топ-5 игроков
+// Получение списка лучших игроков (по разнице верных-неверных)
 app.get("/leaderboard", (req, res) => {
-    let sortedUsers = Object.values(usersScores)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 5);
-    
+    let sortedUsers = Object.entries(usersScores)
+        .sort(([, a], [, b]) => (b.correct - b.wrong) - (a.correct - a.wrong))
+        .slice(0, 5)
+        .map(([id, data]) => ({ user_id: id, ...data }));
+
     res.json(sortedUsers);
 });
 

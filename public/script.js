@@ -2,7 +2,6 @@ let urlParams = new URLSearchParams(window.location.search);
 let userId = urlParams.get("user_id");
 let username = urlParams.get("username") || "Игрок";
 
-// Проверяем, получены ли данные
 if (!userId) {
     alert("Ошибка: не удалось получить user_id.");
     throw new Error("user_id not found");
@@ -15,6 +14,9 @@ let wrongCount = 0;
 const card = document.getElementById("card");
 const correctScoreEl = document.getElementById("correctScore");
 const wrongScoreEl = document.getElementById("wrongScore");
+const leaderboardDiv = document.createElement("div");
+leaderboardDiv.id = "leaderboard";
+document.body.appendChild(leaderboardDiv);
 
 // Запуск нового раунда
 async function startNewRound() {
@@ -56,7 +58,7 @@ async function makeGuess(guess) {
         }
 
         updateScore();
-        sendResult();
+        updateLeaderboard();
         setTimeout(startNewRound, 500);
     } catch (error) {
         console.error("Ошибка при проверке ответа:", error);
@@ -69,18 +71,24 @@ function updateScore() {
     wrongScoreEl.textContent = `❌ ${wrongCount}`;
 }
 
-// Отправка результата на сервер
-async function sendResult() {
+// Получение и отображение рейтинга
+async function updateLeaderboard() {
     try {
-        await fetch("/save_score", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: userId, username: username, score: correctCount })
+        let response = await fetch("/leaderboard");
+        let data = await response.json();
+
+        let leaderboardText = `<h2>🏆 Топ игроков:</h2><ul>`;
+        data.forEach((player, index) => {
+            leaderboardText += `<li>${index + 1}. ${player.username}: ✅ ${player.correct} | ❌ ${player.wrong}</li>`;
         });
+        leaderboardText += `</ul>`;
+
+        leaderboardDiv.innerHTML = leaderboardText;
     } catch (error) {
-        console.error("Ошибка при отправке результата:", error);
+        console.error("Ошибка при получении топ-игроков:", error);
     }
 }
 
 // Запуск первого раунда
 startNewRound();
+updateLeaderboard();
