@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Игра "Интуиция"</title>
   <link rel="stylesheet" href="style.css">
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://telegram.org/js/games.js"></script> <!-- Подключаем Telegram Games API -->
 </head>
 <body>
   <h1>Игра "Интуиция"</h1>
@@ -17,6 +17,10 @@
   <div class="scoreboard">
     <span id="correctScore">✅ 0</span> | <span id="wrongScore">❌ 0</span>
   </div>
+  
+  <!-- Кнопка поделиться -->
+  <button id="shareBtn" class="hidden" onclick="shareScore()">📢 Поделиться результатом</button>
+  
   <button id="restartBtn" class="hidden" onclick="restartGame()">Начать заново</button>
   <script src="script.js"></script>
 </body>
