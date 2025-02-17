@@ -1,13 +1,15 @@
-let tg = window.Telegram.WebApp;
-tg.expand();
+let urlParams = new URLSearchParams(window.location.search);
+let userId = urlParams.get("user_id");
+let username = urlParams.get("username") || "Игрок";
+
+// Проверяем, получены ли данные
+if (!userId) {
+    alert("Ошибка: не удалось получить user_id.");
+    throw new Error("user_id not found");
+}
 
 let correctCount = 0;
 let wrongCount = 0;
-let user = tg.initDataUnsafe.user;
-if (!user) {
-    alert("Ошибка: Telegram WebApp не передал данные.");
-    throw new Error("No Telegram user data");
-}
 
 // Элементы интерфейса
 const card = document.getElementById("card");
@@ -24,7 +26,7 @@ async function startNewRound() {
         await fetch("/start_round", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: user.id })
+            body: JSON.stringify({ user_id: userId })
         });
     } catch (error) {
         console.error("Ошибка при старте раунда:", error);
@@ -37,7 +39,7 @@ async function makeGuess(guess) {
         let response = await fetch("/check_guess", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: user.id, guess: guess })
+            body: JSON.stringify({ user_id: userId, guess: guess })
         });
 
         let data = await response.json();
@@ -67,42 +69,18 @@ function updateScore() {
     wrongScoreEl.textContent = `❌ ${wrongCount}`;
 }
 
-// Отправка результата в Telegram
+// Отправка результата на сервер
 async function sendResult() {
     try {
         await fetch("/save_score", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id: user.id, username: user.username, score: correctCount })
+            body: JSON.stringify({ user_id: userId, username: username, score: correctCount })
         });
     } catch (error) {
         console.error("Ошибка при отправке результата:", error);
     }
 }
-
-// Получение списка лучших игроков
-async function getLeaderboard() {
-    try {
-        let response = await fetch("/leaderboard");
-        let data = await response.json();
-
-        let leaderboardText = "🏆 **Топ игроков:**\n";
-        data.forEach((player, index) => {
-            leaderboardText += `${index + 1}. ${player.username}: ${player.score} очков\n`;
-        });
-
-        alert(leaderboardText);
-    } catch (error) {
-        console.error("Ошибка при получении топ-игроков:", error);
-    }
-}
-
-// Добавляем кнопку просмотра результатов
-const leaderboardBtn = document.createElement("button");
-leaderboardBtn.textContent = "📊 Топ игроков";
-leaderboardBtn.style = "margin-top: 20px; padding: 10px; font-size: 1rem;";
-leaderboardBtn.onclick = getLeaderboard;
-document.body.appendChild(leaderboardBtn);
 
 // Запуск первого раунда
 startNewRound();
