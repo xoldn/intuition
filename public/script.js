@@ -43,17 +43,6 @@ async function startNewRound() {
 
         if (!response.ok) throw new Error("Network response was not ok");
         
-        const data = await response.json();
-        currentColor = data.color; // Сохраняем цвет
-        
-        // Показываем цвет на 300мс
-        card.style.backgroundColor = currentColor;
-        card.textContent = "";
-
-        // Через 300мс скрываем цвет
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        
     } catch (error) {
         console.error("Ошибка при старте раунда:", error);
         card.textContent = "⚠️";
@@ -78,8 +67,16 @@ async function makeGuess(guess) {
         });
 
         if (!response.ok) throw new Error("Network response was not ok");
-        
+
         const data = await response.json();
+        currentColor = data.color; // Сохраняем цвет
+        
+        // Показываем цвет на 300мс
+        card.style.backgroundColor = currentColor;
+        card.textContent = "";
+
+        // Через 300мс скрываем цвет
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         // Обновляем счёт до показа результата
         if (data.correct) {
@@ -91,10 +88,6 @@ async function makeGuess(guess) {
         }
 
         updateScore();
-        await sendResultToServer();
-        
-        // Небольшая пауза перед следующим раундом
-        await new Promise(resolve => setTimeout(resolve, 500));
         
     } catch (error) {
         console.error("Ошибка при проверке ответа:", error);
@@ -109,24 +102,6 @@ async function makeGuess(guess) {
 function updateScore() {
     correctScoreEl.textContent = `✅ ${correctCount}`;
     wrongScoreEl.textContent = `❌ ${wrongCount}`;
-}
-
-// Отправка результата на сервер
-async function sendResultToServer() {
-    try {
-        await fetch("/save_score", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-                user_id: userId,
-                username: username,
-                correct: correctCount,
-                wrong: wrongCount
-            })
-        });
-    } catch (error) {
-        console.error("Ошибка при отправке результата:", error);
-    }
 }
 
 // Функция отображения пользователей
