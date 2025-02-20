@@ -98,9 +98,6 @@ async function makeGuess(guess) {
         updateScore();
         await sendResultToServer();
         
-        // Небольшая пауза перед следующим раундом
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
     } catch (error) {
         console.error("Ошибка при проверке ответа:", error);
         card.textContent = "⚠️";
