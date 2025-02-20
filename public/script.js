@@ -84,27 +84,5 @@ async function sendResultToServer() {
     }
 }
 
-// Отправка результата в Telegram
-async function sendScoreToTelegram() {
-    try {
-        let botToken = process.env.BOT_TOKEN; // Укажи свой токен бота
-        let botUrl = `https://api.telegram.org/bot${botToken}/setGameScore`;
-
-        let params = new URLSearchParams({
-            user_id: userId,
-            score: correctCount,
-            chat_id: chatId,
-            message_id: messageId,
-            force: true
-        });
-
-        await fetch(`${botUrl}?${params}`, { method: "POST" });
-
-        console.log("Результат отправлен в Telegram!");
-    } catch (error) {
-        console.error("Ошибка при отправке результата в Telegram:", error);
-    }
-}
-
 // Запуск первого раунда
 startNewRound();
