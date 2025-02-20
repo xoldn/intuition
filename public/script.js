@@ -5,6 +5,7 @@ let chatId = urlParams.get("chat_id");
 let messageId = urlParams.get("message_id");
 let inlineMessageId = urlParams.get("inline_message_id");
 
+
 if (!userId || (!inlineMessageId && (!chatId || !messageId))) {
     alert("Ошибка: не удалось получить данные пользователя.");
     throw new Error("Missing user data");
@@ -12,7 +13,7 @@ if (!userId || (!inlineMessageId && (!chatId || !messageId))) {
 
 let correctCount = 0;
 let wrongCount = 0;
-let isProcessing = false;
+let isProcessing = true;
 let currentColor = null;
 
 // Элементы интерфейса
@@ -29,10 +30,7 @@ if (!card || !correctScoreEl || !wrongScoreEl) {
 
 // Запуск нового раунда
 async function startNewRound() {
-    if (isProcessing) return;
-    
-    isProcessing = true;
-    currentColor = null;
+    if (!isProcessing) return;
 
     try {
         const response = await fetch("/start_round", {
@@ -53,9 +51,8 @@ async function startNewRound() {
 
 // Проверка ответа
 async function makeGuess(guess) {
-    if (isProcessing || !currentColor) return;
+    if (isProcessing || currentColor) return;
     
-    isProcessing = true;
     try {
         const response = await fetch("/check_guess", {
             method: "POST",
@@ -75,13 +72,7 @@ async function makeGuess(guess) {
         // Показываем цвет на 300мс
         card.style.backgroundColor = currentColor;
         card.textContent = "";
-        card.style.border = data.correct ? "2px solid limegreen" : "2px solid red";
-
-        // Через 300мс скрываем цвет
-        await new Promise(resolve => setTimeout(resolve, 300));
-        card.style.backgroundColor = "#777";
-        card.textContent = "?";
-        card.style.border = "";
+       
 
         // Обновляем счёт до показа результата
         if (data.correct) {
@@ -92,13 +83,20 @@ async function makeGuess(guess) {
             card.style.boxShadow = "inset 0 0 0 5px red";
         }
 
+        // Через 300мс скрываем цвет
+        await new Promise(resolve => setTimeout(resolve, 300));
+        card.style.backgroundColor = "#777";
+        card.textContent = "?";
+        card.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.5)";
+
         updateScore();
         
     } catch (error) {
         console.error("Ошибка при проверке ответа:", error);
         card.textContent = "⚠️";
     } finally {
-        isProcessing = false;
+        currentColor = null;
+        isProcessing = true;
         startNewRound(); // Запускаем следующий раунд
     }
 }
@@ -126,9 +124,16 @@ async function displayUsers() {
         const users = await response.json();
         resultsContent.innerHTML = ""; // Очищаем содержимое
 
+        if (users.length === 0) {
+            resultsContent.textContent = "Нет пользователей для отображения.";
+            return;
+        }
         users.forEach(user => {
             const userElement = document.createElement("div");
-            userElement.textContent = `${user.username}: ${user.score}`;
+            userElement.classList.add("user-result"); // Добавляем класс к каждому элементу с пользователем
+            const totalGuesses = user.correct + user.wrong;
+            const accuracy = totalGuesses > 0 ? ((user.correct / totalGuesses) * 100).toFixed(2) : 0;
+            userElement.textContent = `${user.username}: (${user.correct} ✅, ${user.wrong} ❌, ${accuracy}% 🎯)`;
             resultsContent.appendChild(userElement);
         });
     } catch (error) {
@@ -157,14 +162,19 @@ function restartGame() {
     correctCount = 0;
     wrongCount = 0;
     updateScore();
-
-    // Запускаем новый раунд
     startNewRound();
 }
 
-// Добавляем обработчики событий для кнопок
-document.getElementById("guessWhite")?.addEventListener("click", () => makeGuess("white"));
-document.getElementById("guessBlack")?.addEventListener("click", () => makeGuess("black"));
+const addClickListener = (id, handler) => {
+    document.getElementById(id)?.addEventListener("click", handler);
+};
+
+addClickListener("closeBtnX", closeModal);
+addClickListener("closeBtn", closeModal);
+addClickListener("viewResultsBtn", displayUsers);
+addClickListener("restartBtn", restartGame);
+addClickListener("guessWhite", () => makeGuess("white"));
+addClickListener("guessBlack", () => makeGuess("black"));
 
 // Запуск игры
 startNewRound();

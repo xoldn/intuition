@@ -1,5 +1,6 @@
 const TelegramBot = require("node-telegram-bot-api");
 const axios = require("axios");
+require("dotenv").config();
 
 // Environment variables validation
 const TOKEN = process.env.BOT_TOKEN;
@@ -25,8 +26,6 @@ console.log("Bot started successfully!");
 // Handle game callback queries with support for both inline and regular messages
 bot.on("callback_query", async (query) => {
     try {
-        // Debug logging
-        console.log('Received callback query:', JSON.stringify(query, null, 2));
 
         // Validate the callback query
         if (!query || !query.game_short_name) {
@@ -46,9 +45,6 @@ bot.on("callback_query", async (query) => {
                 messageId: query.message?.message_id
             };
 
-            // Debug log the parameters
-            console.log('Parameters extracted:', params);
-
             // Create URL parameters based on what's available
             const gameUrlWithParams = new URL(GAME_URL);
             
@@ -64,15 +60,10 @@ bot.on("callback_query", async (query) => {
                 gameUrlWithParams.searchParams.append("message_id", params.messageId);
             }
 
-            // Debug log the final URL
-            console.log('Generated game URL:', gameUrlWithParams.toString());
-
             // Answer callback query with the game URL
             await bot.answerCallbackQuery(query.id, {
                 url: gameUrlWithParams.toString()
             });
-
-            console.log('Successfully answered callback query');
         } else {
             console.log('Game short name mismatch:', {
                 received: query.game_short_name,
@@ -99,7 +90,9 @@ bot.on("callback_query", async (query) => {
 // Handler for the /start command to send the game
 bot.onText(/\/start/, async (msg) => {
     try {
-        await bot.sendGame(msg.chat.id, GAME_SHORT_NAME);
+        const chatId = msg.chat.id; // Получаем chatId из msg
+        const sentMessage = await bot.sendGame(chatId, GAME_SHORT_NAME);
+        sendLeaderboard(chatId, sentMessage.message_id);
     } catch (error) {
         console.error('Error sending game:', error);
     }
@@ -117,6 +110,51 @@ bot.on('inline_query', async (query) => {
         console.error('Error answering inline query:', error);
     }
 });
+
+// Функция для отправки таблицы лидеров
+function sendLeaderboard(chatId, messageId) {
+    // Запрос к вашему серверу для получения таблицы лидеров
+    axios.get('http://localhost:5000/leaderboard')
+      .then((response) => {
+        const leaderboard = response.data;
+  
+        if (leaderboard.length === 0) {
+          bot.sendMessage(chatId, 'Таблица лидеров пуста.');
+          return;
+        }
+        
+        // Формирование сообщения с таблицей лидеров
+        let message = '🏆 *Таблица лидеров:*\n\n';
+        leaderboard.forEach((user, index) => {
+            const totalGuesses = user.correct + user.wrong;
+            const accuracy = totalGuesses > 0 ? ((user.correct / totalGuesses) * 100).toFixed(2) : 0;
+          message += `${user.username}: (${user.correct} ✅, ${user.wrong} ❌, ${accuracy}% 🎯)\n\n`;
+        });
+  
+        // Обновление сообщения с игрой, добавляя таблицу лидеров
+        bot.editMessageText(message, {
+          chat_id: chatId,
+          message_id: messageId,
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: 'Заниматься снова!',
+                  callback_game: {}, // Кнопка для повторного запуска игры
+                },
+              ],
+            ],
+          },
+        }).catch((error) => {
+          console.error('Ошибка при обновлении сообщения с таблицей лидеров:', error);
+        });
+      })
+      .catch((error) => {
+        console.error('Ошибка при получении таблицы лидеров:', error);
+        bot.sendMessage(chatId, 'Произошла ошибка при получении таблицы лидеров. Пожалуйста, попробуйте позже.');
+      });
+  }
 
 // Add error handler for uncaught exceptions
 process.on('uncaughtException', (error) => {

@@ -75,7 +75,7 @@ app.post("/check_guess", async (req, res) => {
     const isCorrect = guess === session.color;
     const correctColor = session.color;
     delete gameSessions[user_id];
-
+    
     // Обновление статистики в базе данных
     const row = await dbGet("SELECT correct, wrong FROM usersScores WHERE user_id = ?", [user_id]);
     if (row) {
@@ -121,8 +121,7 @@ app.get("/leaderboard", async (req, res) => {
   try {
     const rows = await dbAll(`
       SELECT username, correct, wrong, (correct - wrong) as score
-      FROM usersScores 
-      WHERE (correct + wrong) >= 200
+      FROM usersScores
       ORDER BY score DESC 
       LIMIT 100
     `, []);

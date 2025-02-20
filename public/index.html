@@ -11,21 +11,21 @@
   <h1>Игра "Интуиция"</h1>
   <div id="card">?</div>
   <div class="buttons">
-    <button id="whiteBtn" onclick="makeGuess('white')">Белое</button>
-    <button id="blackBtn" onclick="makeGuess('black')">Чёрное</button>
+    <button id="guessWhite">Белая</button>
+    <button id="guessBlack">Чёрная</button>
   </div>
   <div class="scoreboard">
     <span id="correctScore">✅ 0</span> | <span id="wrongScore">❌ 0</span>
   </div>
   
-  <button id="viewResultsBtn" onclick="displayUsers()">🏆 Топ результатов</button>
+  <button id="viewResultsBtn">🏆 Топ результатов</button>
  
-  <button id="restartBtn" onclick="restartGame()">Начать заново</button>
+  <button id="restartBtn">Начать заново</button>
 
   <!-- Модальное окно для отображения результатов и кнопки поделиться -->
   <div id="resultsModal" class="modal">
     <div class="modal-content">
-      <span class="close" onclick="closeModal()">&times;</span>
+      <span id="closeBtnX" class="close" onclick="closeModal()">&times;</span>
       <h2>Результаты других пользователей</h2>
       <div id="resultsContent">
         <!-- Здесь будут отображаться результаты -->
@@ -36,6 +36,5 @@
   
 
   <script src="script.js"></script>
-  
 </body>
 </html>
