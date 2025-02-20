@@ -45,7 +45,7 @@ app.post("/start_round", (req, res) => {
         return res.status(400).json({ error: "user_id is required" });
     }
 
-    const color = Math.random() < 0.5 ? "red" : "blue";
+    const color = Math.random() < 0.5 ? "white" : "black";
     gameSessions[user_id] = {
         color,
         timestamp: Date.now()
@@ -53,7 +53,8 @@ app.post("/start_round", (req, res) => {
 
     res.json({ 
         success: true,
-        message: "Round started"
+        message: "Round started",
+        color: color
     });
 });
 
@@ -90,12 +91,7 @@ app.post("/check_guess", (req, res) => {
                     row.correct + (isCorrect ? 1 : 0),
                     row.wrong + (isCorrect ? 0 : 1),
                     user_id
-                ],
-                (err) => {
-                    if (err) {
-                        console.error("Error updating score:", err);
-                    }
-                }
+                ]
             );
         } else {
             // Создаем новую запись
@@ -106,12 +102,7 @@ app.post("/check_guess", (req, res) => {
                     "Игрок",
                     isCorrect ? 1 : 0,
                     isCorrect ? 0 : 1
-                ],
-                (err) => {
-                    if (err) {
-                        console.error("Error inserting score:", err);
-                    }
-                }
+                ]
             );
         }
     });
@@ -169,7 +160,7 @@ app.get("/get_stats", (req, res) => {
     );
 });
 
-// Получение таблицы лидеров (топ 10 по разнице correct - wrong)
+// Получение таблицы лидеров
 app.get("/leaderboard", (req, res) => {
     db.all(`
         SELECT 
@@ -193,13 +184,7 @@ app.get("/leaderboard", (req, res) => {
 
 // Endpoint для обновления счёта в Telegram
 app.post("/update_telegram_score", (req, res) => {
-    const { user_id, correct, wrong } = req.body;
-    
-    if (!user_id) {
-        return res.status(400).json({ error: "user_id is required" });
-    }
-
-    // Здесь можно добавить логику обновления счёта в Telegram
+    // Здесь должна быть логика обновления счёта в Telegram
     res.json({ success: true });
 });
 

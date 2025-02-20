@@ -1,4 +1,3 @@
-// URL Parameters handling
 let urlParams = new URLSearchParams(window.location.search);
 let userId = urlParams.get("user_id");
 let username = urlParams.get("username") || "Игрок";
@@ -6,7 +5,6 @@ let chatId = urlParams.get("chat_id");
 let messageId = urlParams.get("message_id");
 let inlineMessageId = urlParams.get("inline_message_id");
 
-// Modified validation to handle both inline and regular game modes
 if (!userId || (!inlineMessageId && (!chatId || !messageId))) {
     alert("Ошибка: не удалось получить данные пользователя.");
     throw new Error("Missing user data");
@@ -14,7 +12,7 @@ if (!userId || (!inlineMessageId && (!chatId || !messageId))) {
 
 let correctCount = 0;
 let wrongCount = 0;
-let isRoundActive = false; // Add state tracking
+let isProcessing = false;
 
 // Элементы интерфейса
 const card = document.getElementById("card");
@@ -29,191 +27,116 @@ if (!card || !correctScoreEl || !wrongScoreEl) {
 
 // Запуск нового раунда
 async function startNewRound() {
-    if (isRoundActive) {
-        console.log("Раунд уже активен");
-        return;
-    }
+    if (isProcessing) return;
+    
+    isProcessing = true;
+    card.style.backgroundColor = "#777";
+    card.textContent = "?";
+    card.style.boxShadow = "none";
 
     try {
-        isRoundActive = true;
-        
-        // Визуальное обновление карты
-        updateCardAppearance("?", "#777", "none");
-
         const response = await fetch("/start_round", {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Cache-Control": "no-cache"  // Предотвращаем кэширование
-            },
-            body: JSON.stringify({ 
-                user_id: userId,
-                username: username,
-                chat_id: chatId,
-                message_id: messageId,
-                inline_message_id: inlineMessageId
-            })
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error("Network response was not ok");
+        
         const data = await response.json();
-        console.log("Новый раунд начат:", data);
+        console.log("New round started:", data);
+
+        // Показываем цвет на 300мс
+        card.style.backgroundColor = data.color;
+        card.textContent = "";
+
+        // Через 300мс скрываем цвет
+        await new Promise(resolve => setTimeout(resolve, 300));
+        
+        card.style.backgroundColor = "#777";
+        card.textContent = "?";
         
     } catch (error) {
         console.error("Ошибка при старте раунда:", error);
-        updateCardAppearance("⚠️", "#ff6b6b", "none");
+        card.textContent = "⚠️";
     } finally {
-        isRoundActive = false;
+        isProcessing = false;
     }
-}
-
-// Обновление внешнего вида карты
-function updateCardAppearance(text, backgroundColor, boxShadow) {
-    requestAnimationFrame(() => {
-        card.textContent = text;
-        card.style.backgroundColor = backgroundColor;
-        card.style.boxShadow = boxShadow;
-        card.style.transition = "all 0.3s ease";
-    });
 }
 
 // Проверка ответа
 async function makeGuess(guess) {
-    if (isRoundActive) {
-        console.log("Подождите, предыдущий раунд ещё активен");
-        return;
-    }
-
+    if (isProcessing) return;
+    
+    isProcessing = true;
     try {
-        isRoundActive = true;
-        
-        // Визуальная индикация обработки
-        updateCardAppearance("⌛", "#777", "none");
-
         const response = await fetch("/check_guess", {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Cache-Control": "no-cache"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
                 user_id: userId,
-                username: username,
-                guess: guess,
-                chat_id: chatId,
-                message_id: messageId,
-                inline_message_id: inlineMessageId
+                guess: guess
             })
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error("Network response was not ok");
+        
         const data = await response.json();
         
-        // Обновление визуального состояния
-        updateCardAppearance("", data.color, 
-            data.correct ? "inset 0 0 0 5px limegreen" : "inset 0 0 0 5px red");
-
-        // Обновление счёта
+        // Показываем результат
+        card.style.backgroundColor = data.color;
+        card.textContent = "";
+        
         if (data.correct) {
             correctCount++;
+            card.style.boxShadow = "inset 0 0 0 5px limegreen";
         } else {
             wrongCount++;
+            card.style.boxShadow = "inset 0 0 0 5px red";
         }
 
         updateScore();
-        await Promise.all([
-            sendResultToServer(),
-            sendScoreToTelegram()
-        ]);
-
+        await sendResultToServer();
+        
+        // Небольшая пауза перед следующим раундом
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
     } catch (error) {
         console.error("Ошибка при проверке ответа:", error);
-        updateCardAppearance("⚠️", "#ff6b6b", "none");
+        card.textContent = "⚠️";
     } finally {
-        isRoundActive = false;
-        // Небольшая задержка перед следующим раундом
-        setTimeout(() => startNewRound(), 800);
+        isProcessing = false;
+        startNewRound();
     }
 }
 
 // Обновление счета
 function updateScore() {
-    requestAnimationFrame(() => {
-        correctScoreEl.textContent = `✅ ${correctCount}`;
-        wrongScoreEl.textContent = `❌ ${wrongCount}`;
-    });
+    correctScoreEl.textContent = `✅ ${correctCount}`;
+    wrongScoreEl.textContent = `❌ ${wrongCount}`;
 }
 
 // Отправка результата на сервер
 async function sendResultToServer() {
     try {
-        const response = await fetch("/save_score", {
+        await fetch("/save_score", {
             method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Cache-Control": "no-cache"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
-                user_id: userId, 
-                username: username, 
-                score: correctCount,
-                chat_id: chatId,
-                message_id: messageId,
-                inline_message_id: inlineMessageId
+                user_id: userId,
+                username: username,
+                correct: correctCount,
+                wrong: wrongCount
             })
         });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Результат сохранен:", data);
-
     } catch (error) {
         console.error("Ошибка при отправке результата:", error);
     }
 }
 
-// Отправка счета в Telegram
-async function sendScoreToTelegram() {
-    try {
-        const response = await fetch("/update_telegram_score", {
-            method: "POST",
-            headers: { 
-                "Content-Type": "application/json",
-                "Cache-Control": "no-cache"
-            },
-            body: JSON.stringify({ 
-                user_id: userId,
-                username: username,
-                score: correctCount,
-                chat_id: chatId,
-                message_id: messageId,
-                inline_message_id: inlineMessageId
-            })
-        });
+// Добавляем обработчики событий для кнопок
+document.getElementById("guessWhite")?.addEventListener("click", () => makeGuess("white"));
+document.getElementById("guessBlack")?.addEventListener("click", () => makeGuess("black"));
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-    } catch (error) {
-        console.error("Ошибка при отправке счета в Telegram:", error);
-    }
-}
-
-// Обработчики событий для кнопок
-document.getElementById("guessRed")?.addEventListener("click", () => makeGuess("red"));
-document.getElementById("guessBlue")?.addEventListener("click", () => makeGuess("blue"));
-
-// Запуск первого раунда
-window.addEventListener("load", () => {
-    console.log("Игра загружена, начинаем первый раунд");
-    startNewRound();
-});
+// Запуск игры
+startNewRound();
