@@ -74,11 +74,17 @@ async function makeGuess(guess) {
         // Показываем цвет на 300мс
         card.style.backgroundColor = currentColor;
         card.textContent = "";
+        if (data.correct) {
+            card.style.border = "2px solid limegreen";
+        } else {
+            card.style.border = "2px solid red";
+        }
 
         // Через 300мс скрываем цвет
         await new Promise(resolve => setTimeout(resolve, 300));
         card.style.backgroundColor = "#777";
         card.textContent = "?";
+        card.style.border = "";
 
         // Обновляем счёт до показа результата
         if (data.correct) {
