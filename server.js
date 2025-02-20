@@ -140,9 +140,9 @@ app.get("/leaderboard", async (req, res) => {
     const rows = await dbAll(`
       SELECT username, correct, wrong, (correct - wrong) as score
       FROM usersScores 
-      WHERE (correct + wrong) >= 10
+      WHERE (correct + wrong) >= 200
       ORDER BY score DESC 
-      LIMIT 10
+      LIMIT 100
     `, []);
     res.json(rows);
   } catch (error) {
