@@ -51,8 +51,9 @@ async function startNewRound() {
         currentColor = data.color; // Сохраняем цвет
         
         // Показываем цвет на 300мс
-        card.style.backgroundColor = currentColor;
+        
         card.textContent = "";
+        card.style.backgroundColor = currentColor;
 
         // Через 300мс скрываем цвет
         await new Promise(resolve => setTimeout(resolve, 300));
