@@ -15,7 +15,6 @@ if (!TOKEN || !GAME_URL || !GAME_SHORT_NAME) {
 // Initialize bot with error handling
 const bot = new TelegramBot(TOKEN, { 
     polling: true,
-    // Add polling error handler
     polling_error_handler: (error) => {
         console.error('Polling error:', error);
     }
@@ -23,46 +22,72 @@ const bot = new TelegramBot(TOKEN, {
 
 console.log("Bot started successfully!");
 
-// Handle game callback queries with proper error handling
+// Handle game callback queries with proper error handling and debugging
 bot.on("callback_query", async (query) => {
     try {
+        // Debug logging
+        console.log('Received callback query:', JSON.stringify(query, null, 2));
+
         // Validate the callback query
         if (!query || !query.game_short_name) {
+            console.error('Invalid callback query structure:', query);
             throw new Error("Invalid callback query");
         }
 
         // Verify game short name
         if (query.game_short_name === GAME_SHORT_NAME) {
-            const userId = query.from.id;
-            // Use encodeURIComponent to properly escape URL parameters
-            const username = encodeURIComponent(query.from.username || "Player");
-            const chatId = query.message?.chat?.id;
-            const messageId = query.message?.message_id;
+            // Extract and validate all required parameters
+            const params = {
+                userId: query.from?.id,
+                username: query.from?.username || "Player",
+                chatId: query.message?.chat?.id,
+                messageId: query.message?.message_id
+            };
 
-            // Validate required parameters
-            if (!userId || !chatId || !messageId) {
-                throw new Error("Missing required parameters");
+            // Debug log the parameters
+            console.log('Parameters extracted:', params);
+
+            // Detailed validation of each parameter
+            const missingParams = [];
+            if (!params.userId) missingParams.push('userId');
+            if (!params.chatId) missingParams.push('chatId');
+            if (!params.messageId) missingParams.push('messageId');
+
+            if (missingParams.length > 0) {
+                throw new Error(`Missing required parameters: ${missingParams.join(', ')}`);
             }
 
             // Construct game URL with validated parameters
             const gameUrlWithParams = new URL(GAME_URL);
-            gameUrlWithParams.searchParams.append("user_id", userId);
-            gameUrlWithParams.searchParams.append("username", username);
-            gameUrlWithParams.searchParams.append("chat_id", chatId);
-            gameUrlWithParams.searchParams.append("message_id", messageId);
+            gameUrlWithParams.searchParams.append("user_id", params.userId);
+            gameUrlWithParams.searchParams.append("username", encodeURIComponent(params.username));
+            gameUrlWithParams.searchParams.append("chat_id", params.chatId);
+            gameUrlWithParams.searchParams.append("message_id", params.messageId);
+
+            // Debug log the final URL
+            console.log('Generated game URL:', gameUrlWithParams.toString());
 
             // Answer callback query with the game URL
             await bot.answerCallbackQuery(query.id, {
                 url: gameUrlWithParams.toString()
             });
+
+            console.log('Successfully answered callback query');
+        } else {
+            console.log('Game short name mismatch:', {
+                received: query.game_short_name,
+                expected: GAME_SHORT_NAME
+            });
         }
     } catch (error) {
-        console.error('Error handling callback query:', error);
+        const errorTime = new Date().toISOString();
+        console.error(`Error at ${errorTime} handling callback query:`, error);
+        console.error('Query object at time of error:', JSON.stringify(query, null, 2));
         
         // Attempt to notify user of error
         try {
             await bot.answerCallbackQuery(query.id, {
-                text: "Sorry, an error occurred while loading the game.",
+                text: "Sorry, an error occurred while loading the game. Please try again.",
                 show_alert: true
             });
         } catch (notificationError) {
@@ -80,3 +105,6 @@ process.on('uncaughtException', (error) => {
 process.on('unhandledRejection', (error) => {
     console.error('Unhandled Rejection:', error);
 });
+
+// Log bot initialization time
+console.log(`Bot initialized at: ${new Date().toISOString()}`);
