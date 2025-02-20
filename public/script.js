@@ -13,6 +13,7 @@ if (!userId || (!inlineMessageId && (!chatId || !messageId))) {
 let correctCount = 0;
 let wrongCount = 0;
 let isProcessing = false;
+let currentColor = null;
 
 // Элементы интерфейса
 const card = document.getElementById("card");
@@ -30,6 +31,9 @@ async function startNewRound() {
     if (isProcessing) return;
     
     isProcessing = true;
+    currentColor = null;
+
+    // Сначала показываем знак вопроса
     card.style.backgroundColor = "#777";
     card.textContent = "?";
     card.style.boxShadow = "none";
@@ -44,15 +48,16 @@ async function startNewRound() {
         if (!response.ok) throw new Error("Network response was not ok");
         
         const data = await response.json();
-        console.log("New round started:", data);
-
+        currentColor = data.color; // Сохраняем цвет
+        
         // Показываем цвет на 300мс
-        card.style.backgroundColor = data.color;
+        card.style.backgroundColor = currentColor;
         card.textContent = "";
 
         // Через 300мс скрываем цвет
         await new Promise(resolve => setTimeout(resolve, 300));
         
+        // Возвращаем знак вопроса
         card.style.backgroundColor = "#777";
         card.textContent = "?";
         
@@ -66,7 +71,7 @@ async function startNewRound() {
 
 // Проверка ответа
 async function makeGuess(guess) {
-    if (isProcessing) return;
+    if (isProcessing || !currentColor) return;
     
     isProcessing = true;
     try {
@@ -82,11 +87,8 @@ async function makeGuess(guess) {
         if (!response.ok) throw new Error("Network response was not ok");
         
         const data = await response.json();
-        
-        // Показываем результат
-        card.style.backgroundColor = data.color;
-        card.textContent = "";
-        
+
+        // Обновляем счёт до показа результата
         if (data.correct) {
             correctCount++;
             card.style.boxShadow = "inset 0 0 0 5px limegreen";
@@ -98,12 +100,15 @@ async function makeGuess(guess) {
         updateScore();
         await sendResultToServer();
         
+        // Небольшая пауза перед следующим раундом
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
     } catch (error) {
         console.error("Ошибка при проверке ответа:", error);
         card.textContent = "⚠️";
     } finally {
         isProcessing = false;
-        startNewRound();
+        startNewRound(); // Запускаем следующий раунд
     }
 }
 
