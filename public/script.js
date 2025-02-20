@@ -1,6 +1,6 @@
 let urlParams = new URLSearchParams(window.location.search);
-let userId = urlParams.get("user_id");
-let username = urlParams.get("username") || "Игрок";
+let userId = Telegram.WebApp.initDataUnsafe?.user?.id;
+let username = Telegram.WebApp.initDataUnsafe?.user?.username || "Игрок";
 let chatId = urlParams.get("chat_id");
 let messageId = urlParams.get("message_id");
 let inlineMessageId = urlParams.get("inline_message_id");
