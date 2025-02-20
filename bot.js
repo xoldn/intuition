@@ -12,7 +12,6 @@ console.log("Бот запущен!");
 
 // Запуск игры через callback_query
 bot.on("callback_query", (query) => {
-    console.log(query.game_short_name);
     if (query.game_short_name === GAME_SHORT_NAME) {
         const userId = query.from.id;
         const username = query.from.username || "Игрок";
