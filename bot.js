@@ -1,47 +1,21 @@
-const TelegramBot = require('node-telegram-bot-api');
-require('dotenv').config();
+const TelegramBot = require("node-telegram-bot-api");
+const axios = require("axios");
 
-const token = process.env.BOT_TOKEN;
-if (!token) {
-    console.error('BOT_TOKEN is not set in environment variables');
-    process.exit(1);
-}
+const TOKEN = process.env.BOT_TOKEN;
+const GAME_URL = process.env.GAME_URL;
+const GAME_SHORT_NAME = process.env.GAME_SHORT_NAME; // short name установленный у бота
 
-const bot = new TelegramBot(token, { polling: true });
+const bot = new TelegramBot(TOKEN, { polling: true });
 
-// Handle polling errors
-bot.on('polling_error', (error) => {
-    console.error('Polling error:', error);
-});
+console.log("Бот запущен!");
 
-bot.on('message', async (msg) => {
-    const chatId = msg.chat.id;
-    const userId = msg.from.id;
-    const username = msg.from.username || msg.from.first_name;
 
-    if (msg.text === '/start') {
-        const gameUrl = `https://your-domain.com/game.html?user_id=${userId}&chat_id=${chatId}&username=${username}`;
-        await bot.sendMessage(chatId, 'Добро пожаловать в игру Интуиция! Нажмите кнопку ниже, чтобы начать:', {
-            reply_markup: {
-                inline_keyboard: [[
-                    { text: '🎮 Играть', url: gameUrl }
-                ]]
-            }
-        });
+// Запуск игры через callback_query
+bot.on("callback_query", (query) => {
+    if (query.game_short_name === GAME_SHORT_NAME) {
+        const userId = query.from.id;
+        const username = query.from.username || "Игрок";
+        const gameUrlWithParams = `${GAME_URL}?user_id=${userId}&username=${username}&chat_id=${query.message.chat.id}&message_id=${query.message.message_id}`;
+        bot.answerCallbackQuery(query.id, { url: gameUrlWithParams });
     }
-});
-
-// Handle callback queries
-bot.on('callback_query', (query) => {
-    bot.answerCallbackQuery(query.id);
-});
-
-process.on('SIGINT', () => {
-    bot.stopPolling();
-    process.exit(0);
-});
-
-process.on('SIGTERM', () => {
-    bot.stopPolling();
-    process.exit(0);
 });
