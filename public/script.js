@@ -87,7 +87,7 @@ async function sendResultToServer() {
 // Отправка результата в Telegram
 async function sendScoreToTelegram() {
     try {
-        let botToken = "YOUR_BOT_TOKEN"; // Укажи свой токен бота
+        let botToken = process.env.BOT_TOKEN; // Укажи свой токен бота
         let botUrl = `https://api.telegram.org/bot${botToken}/setGameScore`;
 
         let params = new URLSearchParams({
