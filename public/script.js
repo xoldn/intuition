@@ -59,7 +59,7 @@ async function makeGuess(guess) {
         updateScore();
         sendResultToServer();
         sendScoreToTelegram();
-        setTimeout(startNewRound, 500);
+        setTimeout(startNewRound, 50);
     } catch (error) {
         console.error("Ошибка при проверке ответа:", error);
     }
