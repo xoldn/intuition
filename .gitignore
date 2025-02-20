@@ -1,0 +1,39 @@
+# Загруженные модули
+node_modules/          # для Node.js проектов
+venv/                  # для Python виртуального окружения
+bower_components/      # для Bower пакетов
+vendor/               # для PHP/Composer пакетов
+packages/             # для некоторых других пакетных менеджеров
+
+# Файлы зависимостей
+package-lock.json     # для npm
+yarn.lock            # для Yarn
+composer.lock        # для PHP/Composer
+
+# Кэш и временные файлы
+.cache/
+dist/
+build/
+tmp/
+temp/
+
+# Логи
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE и редакторы
+.idea/               # PhpStorm, WebStorm и др.
+.vscode/            # Visual Studio Code
+*.swp               # Vim
+*.swo               # Vim
+*.swn               # Vim
+.DS_Store           # MacOS
+Thumbs.db           # Windows
+
+# Конфигурационные файлы с чувствительными данными
+.env
+.env.local
+.env.*.local
+config.local.js
