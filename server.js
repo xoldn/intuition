@@ -64,7 +64,7 @@ app.post("/start_round", (req, res) => {
 // Endpoint для проверки ответа пользователя
 app.post("/check_guess", async (req, res) => {
   try {
-    const { user_id, guess } = req.body;
+    const { user_id, username, guess } = req.body;
     if (!user_id || !guess) {
       return res.status(400).json({ error: "user_id and guess are required" });
     }
@@ -86,7 +86,7 @@ app.post("/check_guess", async (req, res) => {
     } else {
       await dbRun(
         "INSERT INTO usersScores (user_id, username, correct, wrong) VALUES (?, ?, ?, ?)",
-        [user_id, "Игрок", isCorrect ? 1 : 0, isCorrect ? 0 : 1]
+        [user_id, username || "Игрок", isCorrect ? 1 : 0, isCorrect ? 0 : 1]
       );
     }
 

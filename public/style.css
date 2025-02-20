@@ -59,3 +59,19 @@ body {
   .scoreboard {
     font-size: 1.2rem;
   }  
+
+  #shareBtn,
+  #restartBtn {
+      margin: 1rem;
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+  }
+
+  #shareBtn:hover,
+  #restartBtn:hover {
+      background-color: #ddd;
+  }

@@ -51,10 +51,7 @@ async function startNewRound() {
 
         // Через 300мс скрываем цвет
         await new Promise(resolve => setTimeout(resolve, 300));
-        
-        // Возвращаем знак вопроса
-        card.style.backgroundColor = "#777";
-        card.textContent = "?";
+
         
     } catch (error) {
         console.error("Ошибка при старте раунда:", error);
@@ -129,6 +126,24 @@ async function sendResultToServer() {
     } catch (error) {
         console.error("Ошибка при отправке результата:", error);
     }
+}
+
+function shareScore() {
+    if (window.Telegram && Telegram.Game && typeof Telegram.Game.shareScore === "function") {
+        Telegram.Game.shareScore(correctCount);
+    } else {
+        console.warn("Telegram Game API shareScore не доступен");
+    }
+}
+
+function restartGame() {
+    // Сброс счётов
+    correctCount = 0;
+    wrongCount = 0;
+    updateScore();
+
+    // Запускаем новый раунд
+    startNewRound();
 }
 
 // Добавляем обработчики событий для кнопок
