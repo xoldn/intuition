@@ -22,7 +22,7 @@ const bot = new TelegramBot(TOKEN, {
 
 console.log("Bot started successfully!");
 
-// Handle game callback queries with proper error handling and debugging
+// Handle game callback queries with support for both inline and regular messages
 bot.on("callback_query", async (query) => {
     try {
         // Debug logging
@@ -40,6 +40,8 @@ bot.on("callback_query", async (query) => {
             const params = {
                 userId: query.from?.id,
                 username: query.from?.username || "Player",
+                // Handle both inline and regular message cases
+                inlineMessageId: query.inline_message_id,
                 chatId: query.message?.chat?.id,
                 messageId: query.message?.message_id
             };
@@ -47,22 +49,20 @@ bot.on("callback_query", async (query) => {
             // Debug log the parameters
             console.log('Parameters extracted:', params);
 
-            // Detailed validation of each parameter
-            const missingParams = [];
-            if (!params.userId) missingParams.push('userId');
-            if (!params.chatId) missingParams.push('chatId');
-            if (!params.messageId) missingParams.push('messageId');
-
-            if (missingParams.length > 0) {
-                throw new Error(`Missing required parameters: ${missingParams.join(', ')}`);
-            }
-
-            // Construct game URL with validated parameters
+            // Create URL parameters based on what's available
             const gameUrlWithParams = new URL(GAME_URL);
+            
+            // Add required parameters
             gameUrlWithParams.searchParams.append("user_id", params.userId);
             gameUrlWithParams.searchParams.append("username", encodeURIComponent(params.username));
-            gameUrlWithParams.searchParams.append("chat_id", params.chatId);
-            gameUrlWithParams.searchParams.append("message_id", params.messageId);
+
+            // Add either inline_message_id or chat_id + message_id
+            if (params.inlineMessageId) {
+                gameUrlWithParams.searchParams.append("inline_message_id", params.inlineMessageId);
+            } else if (params.chatId && params.messageId) {
+                gameUrlWithParams.searchParams.append("chat_id", params.chatId);
+                gameUrlWithParams.searchParams.append("message_id", params.messageId);
+            }
 
             // Debug log the final URL
             console.log('Generated game URL:', gameUrlWithParams.toString());
@@ -87,12 +87,34 @@ bot.on("callback_query", async (query) => {
         // Attempt to notify user of error
         try {
             await bot.answerCallbackQuery(query.id, {
-                text: "Sorry, an error occurred while loading the game. Please try again.",
-                show_alert: true
+                text: "Game is loading...",
+                show_alert: false
             });
         } catch (notificationError) {
             console.error('Error sending error notification:', notificationError);
         }
+    }
+});
+
+// Handler for the /start command to send the game
+bot.onText(/\/start/, async (msg) => {
+    try {
+        await bot.sendGame(msg.chat.id, GAME_SHORT_NAME);
+    } catch (error) {
+        console.error('Error sending game:', error);
+    }
+});
+
+// Handler to send game inline
+bot.on('inline_query', async (query) => {
+    try {
+        await bot.answerInlineQuery(query.id, [{
+            type: 'game',
+            id: '1',
+            game_short_name: GAME_SHORT_NAME
+        }]);
+    } catch (error) {
+        console.error('Error answering inline query:', error);
     }
 });
 
@@ -106,5 +128,4 @@ process.on('unhandledRejection', (error) => {
     console.error('Unhandled Rejection:', error);
 });
 
-// Log bot initialization time
 console.log(`Bot initialized at: ${new Date().toISOString()}`);
