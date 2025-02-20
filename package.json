@@ -10,6 +10,8 @@
     "dependencies": {
         "express": "^4.21.2",
         "cors": "^2.8.5",
-        "concurrently": "^7.6.0"
+        "concurrently": "^7.6.0",
+        "node-telegram-bot-api": "^0.66.0",
+        "axios": "^1.7.9"
     }
 }
