@@ -1,82 +1,112 @@
+/* Определим CSS-переменные для базовых цветов */
+:root {
+  --bg-dark: #333;
+  --bg-light: #fff;
+  --bg-black: #000000;
+  --color-dark: #333;
+  --color-light: #fff;
+  --primary: #007bff;
+  --btn-hover-bg: #ddd;
+}
+
+/* Общие стили для страницы */
 body {
-    font-family: Arial, sans-serif;
-    background: #333;
-    color: #fff;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    margin: 0;
-  }
-  h1 {
-    margin-bottom: 20px;
-  }
-  #card {
-    width: 200px;
-    height: 300px;
-    background-color: #777;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 30px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-  }
-  .buttons {
-    margin-bottom: 30px;
-  }
-  button {
-    font-size: 1rem;
-    padding: 10px 20px;
-    margin: 0 10px;
-    cursor: pointer;
-    border: none;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-  }
-  button:hover {
-    opacity: 0.8;
-  }
-  #whiteBtn {
-    background-color: #fff;
-    color: #333;
-  }
-  #blackBtn {
-    background-color: #000;
-    color: #fff;
-  }
-  #restartBtn {
-    background-color: #007bff;
-    color: #fff;
-    margin-top: 20px;
-  }
-  .hidden {
-    display: none;
-  }
-  .scoreboard {
-    font-size: 1.2rem;
-  }  
+  font-family: Arial, sans-serif;
+  background: var(--bg-dark);
+  color: var(--color-light);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 1rem;
+}
 
-  #shareBtn,
-  #restartBtn {
-      margin: 1rem;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      cursor: pointer;
-      border: none;
-      border-radius: 5px;
-      transition: background-color 0.3s;
-  }
+h1 {
+  margin-bottom: 20px;
+}
 
-  #shareBtn:hover,
-  #restartBtn:hover {
-      background-color: #ddd;
-  }
+/* Стили для игровой карточки */
+#card {
+  width: 200px;
+  height: 300px;
+  background-color: #777;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  transition: box-shadow 0.3s ease;
+}
 
-  /* Стили для модального окна */
+/* Стили блока с кнопками */
+.buttons {
+  margin-bottom: 30px;
+}
+
+/* Общие стили для кнопок */
+button {
+  font-size: 1rem;
+  padding: 10px 20px;
+  margin: 0 10px;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s, opacity 0.3s;
+}
+
+button:hover {
+  opacity: 0.8;
+}
+
+/* Стили для кнопок "Белое" и "Чёрное" */
+#whiteBtn {
+  background-color: var(--bg-light);
+  color: var(--color-dark);
+}
+
+#blackBtn {
+  background-color: var(--bg-black);
+  color: var(--bg-light);
+}
+
+/* Кнопки для управления игрой */
+#restartBtn,
+#viewResultsBtn {
+  background-color: var(--primary);
+  color: var(--bg-light);
+  margin-top: 20px;
+}
+
+.scoreboard {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+/* Стили для кнопок под модальным окном */
+#shareBtn,
+#restartBtn {
+  margin: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+#shareBtn:hover,
+#restartBtn:hover {
+  background-color: var(--btn-hover-bg);
+}
+
+/* Класс для скрытых элементов */
+.hidden {
+  display: none;
+}
+
+/* Стили для модального окна */
 .modal {
   display: none; /* Скрыто по умолчанию */
   position: fixed;
@@ -87,11 +117,19 @@ body {
   height: 100%;
   overflow: auto;
   background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
+  animation: fadeIn 0.3s ease;
+}
+
+/* Анимация появления модального окна */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 /* Стили для содержимого модального окна */
 .modal-content {
-  background-color: #fff;
+  background-color: var(--bg-light);
+  color: var(--color-dark);
   margin: 10% auto; /* Центрирование по вертикали и горизонтали */
   padding: 20px;
   border: 1px solid #888;
@@ -99,22 +137,29 @@ body {
   max-width: 500px;
   border-radius: 10px;
   position: relative;
+  animation: slideDown 0.3s ease;
+}
+
+/* Анимация для содержимого модального окна */
+@keyframes slideDown {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 /* Кнопка закрытия модального окна */
 .close {
   color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
   position: absolute;
   top: 5px;
   right: 10px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s;
 }
 
 .close:hover,
 .close:focus {
-  color: #000;
+  color: var(--color-dark);
   text-decoration: none;
 }
