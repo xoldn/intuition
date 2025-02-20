@@ -133,7 +133,18 @@ async function displayUsers() {
             userElement.classList.add("user-result"); // Добавляем класс к каждому элементу с пользователем
             const totalGuesses = user.correct + user.wrong;
             const accuracy = totalGuesses > 0 ? ((user.correct / totalGuesses) * 100).toFixed(2) : 0;
-            userElement.textContent = `${user.username}: (${user.correct} ✅, ${user.wrong} ❌, ${accuracy}% 🎯)`;
+            const displayName = user.user_id === userId ? "я" : user.username;
+            userElement.textContent = `${displayName}: (${user.correct} ✅, ${user.wrong} ❌, ${accuracy}% 🎯)`;
+
+            if (user.user_id === userId) {
+                userElement.style.fontWeight = "bold"; // Выделяем текущего пользователя
+                userElement.style.color = "blue"; // Изменяем цвет текста
+                userElement.style.backgroundColor = "lightyellow"; // Изменяем цвет фона
+                userElement.style.border = "1px solid blue"; // Добавляем границу
+                userElement.style.padding = "5px"; // Добавляем отступы
+                userElement.style.borderRadius = "5px"; // Скругляем углы
+            }
+
             resultsContent.appendChild(userElement);
         });
     } catch (error) {
