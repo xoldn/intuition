@@ -4,8 +4,7 @@
     "description": "A simple intuition game for Telegram WebApps",
     "main": "server.js",
     "scripts": {
-        "start": "node server.js",
-        "start-all": "concurrently \"node server.js\" \"node bot.js\""
+        "start": "concurrently \"node server.js\" \"node bot.js\""
     },
     "dependencies": {
         "express": "^4.21.2",
