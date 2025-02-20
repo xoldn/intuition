@@ -17,6 +17,7 @@ let currentColor = null;
 
 // Элементы интерфейса
 const card = document.getElementById("card");
+const resultsContent = document.getElementById("resultsContent");
 const correctScoreEl = document.getElementById("correctScore");
 const wrongScoreEl = document.getElementById("wrongScore");
 
@@ -128,11 +129,46 @@ async function sendResultToServer() {
     }
 }
 
+// Функция отображения пользователей
+async function displayUsers() {
+    const modal = document.getElementById("resultsModal");
+    if (modal) {
+        modal.style.display = "block";
+    }
+    try {
+        const response = await fetch("/leaderboard", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" }
+        });
+
+        if (!response.ok) throw new Error("Network response was not ok");
+
+        const users = await response.json();
+        resultsContent.innerHTML = ""; // Очищаем содержимое
+
+        users.forEach(user => {
+            const userElement = document.createElement("div");
+            userElement.textContent = `${user.username}: ${user.score}`;
+            resultsContent.appendChild(userElement);
+        });
+    } catch (error) {
+        console.error("Ошибка при получении пользователей:", error);
+        resultsContent.textContent = "Не удалось загрузить пользователей.";
+    }
+}
+
 function shareScore() {
     if (window.Telegram && Telegram.Game && typeof Telegram.Game.shareScore === "function") {
         Telegram.Game.shareScore(correctCount);
     } else {
         console.warn("Telegram Game API shareScore не доступен");
+    }
+}
+
+function closeModal() {
+    const modal = document.getElementById("resultsModal");
+    if (modal) {
+        modal.style.display = "none";
     }
 }
 

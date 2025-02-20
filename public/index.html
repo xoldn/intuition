@@ -21,7 +21,19 @@
  
   <button id="restartBtn" onclick="restartGame()">Начать заново</button>
   <!-- Кнопка поделиться -->
-  <button id="shareBtn" onclick="shareScore()">📢 Поделиться результатом</button>
+  <button id="viewResultsBtn" onclick="displayUsers()">👀 Топ пользователей</button>
+
+  <!-- Модальное окно для отображения результатов и кнопки поделиться -->
+  <div id="resultsModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>Результаты других пользователей</h2>
+      <div id="resultsContent">
+        <!-- Здесь будут отображаться результаты -->
+      </div>
+      <button id="shareBtn" onclick="shareScore()">📢 Поделиться результатом</button>
+    </div>
+  </div>
   
 
   <script src="script.js"></script>
