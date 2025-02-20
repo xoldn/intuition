@@ -96,11 +96,6 @@ button:hover {
   transition: background-color 0.3s;
 }
 
-#shareBtn:hover,
-#restartBtn:hover {
-  background-color: var(--btn-hover-bg);
-}
-
 /* Класс для скрытых элементов */
 .hidden {
   display: none;

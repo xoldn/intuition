@@ -58,7 +58,7 @@ app.post("/start_round", (req, res) => {
   }
   const color = Math.random() < 0.5 ? "white" : "black";
   gameSessions[user_id] = { color, timestamp: Date.now() };
-  res.json({ success: true, message: "Round started", color });
+  res.json({ success: true, message: "Round started" });
 });
 
 // Endpoint для проверки ответа пользователя
@@ -93,24 +93,6 @@ app.post("/check_guess", async (req, res) => {
     res.json({ correct: isCorrect, color: correctColor });
   } catch (error) {
     console.error("Ошибка в /check_guess:", error);
-    res.status(500).json({ error: "Database error" });
-  }
-});
-
-// Endpoint для сохранения результата
-app.post("/save_score", async (req, res) => {
-  try {
-    const { user_id, username, correct, wrong } = req.body;
-    if (!user_id || correct === undefined || wrong === undefined) {
-      return res.status(400).json({ error: "user_id, correct, and wrong are required" });
-    }
-    await dbRun(
-      "INSERT OR REPLACE INTO usersScores (user_id, username, correct, wrong) VALUES (?, ?, ?, ?)",
-      [user_id, username || "Игрок", correct, wrong]
-    );
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Ошибка в /save_score:", error);
     res.status(500).json({ error: "Database error" });
   }
 });

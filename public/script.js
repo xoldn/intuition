@@ -70,15 +70,12 @@ async function makeGuess(guess) {
 
         const data = await response.json();
         currentColor = data.color; // Сохраняем цвет
+        console.log("Пользователь угадал:", data.correct);
         
         // Показываем цвет на 300мс
         card.style.backgroundColor = currentColor;
         card.textContent = "";
-        if (data.correct) {
-            card.style.border = "2px solid limegreen";
-        } else {
-            card.style.border = "2px solid red";
-        }
+        card.style.border = data.correct ? "2px solid limegreen" : "2px solid red";
 
         // Через 300мс скрываем цвет
         await new Promise(resolve => setTimeout(resolve, 300));
