@@ -114,7 +114,7 @@ bot.on('inline_query', async (query) => {
 // Функция для отправки таблицы лидеров
 function sendLeaderboard(chatId, messageId) {
     // Запрос к вашему серверу для получения таблицы лидеров
-    axios.get('http://localhost:10000/leaderboard')
+    axios.get('http://localhost:5000/leaderboard')
       .then((response) => {
         const leaderboard = response.data;
   
